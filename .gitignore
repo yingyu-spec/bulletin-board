@@ -1,0 +1,5 @@
+# 佈告欄系統 - 忽略不需上傳的檔案
+google-apps-script/
+.DS_Store
+*.log
+node_modules/
