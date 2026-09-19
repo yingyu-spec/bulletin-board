@@ -9,7 +9,7 @@ const CONFIG = {
 
   // 2. LINE LIFF ID (若尚未申請，系統會自動使用本機模擬登入模式)
   // 例: '2001234567-abcdefgh'
-  LIFF_ID: '',
+  LIFF_ID: '2011665856-Jbwo8OoB',
 
   // 3. 成員名單 (01 ~ 16 號)
   MEMBERS: [
