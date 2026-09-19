@@ -199,8 +199,23 @@
             <textarea id="postContentInput" class="form-textarea" rows="4" placeholder="請輸入重要事項、出勤任務或公告說明..." required></textarea>
           </div>
 
-          <!-- 01~16 出勤人員點選 -->
+          <!-- 公告種類切換 -->
           <div class="form-group">
+            <label class="form-label"><span>🏷️ 公告種類</span></label>
+            <div style="display:flex; gap:12px;">
+              <button type="button" id="btnCategoryStation" class="category-tab-btn active"
+                onclick="App.switchCategory('station')" style="flex:1; padding:14px; font-size:1.05rem; font-weight:800; border-radius:12px; border:2px solid var(--cyber-blue); background:var(--cyber-blue); color:#fff; cursor:pointer; transition:all 0.2s;">
+                🚨 分隊勤務
+              </button>
+              <button type="button" id="btnCategoryBureau" class="category-tab-btn"
+                onclick="App.switchCategory('bureau')" style="flex:1; padding:14px; font-size:1.05rem; font-weight:800; border-radius:12px; border:2px solid #e2e8f0; background:#f8fafc; color:#64748b; cursor:pointer; transition:all 0.2s;">
+                🏢 局內公告
+              </button>
+            </div>
+          </div>
+
+          <!-- 分隊勤務: 出勤人員選擇 -->
+          <div class="form-group" id="sectionAttendees">
             <div class="form-label">
               <span>👥 出勤人員 (可複選 01~16 號)</span>
               <div class="attendees-selector-controls">
@@ -211,6 +226,14 @@
             <!-- 01~16 大按鈕網格 -->
             <div class="attendees-grid-select" id="attendeesGrid">
               <!-- 由 JS 生成 01 ~ 16 切換按鈕 -->
+            </div>
+          </div>
+
+          <!-- 局內公告: 科室選擇 -->
+          <div class="form-group" id="sectionDepartment" style="display:none;">
+            <div class="form-label"><span>🏢 相關科室</span></div>
+            <div id="departmentGrid" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:8px;">
+              <!-- 由 JS 生成科室按鈕 -->
             </div>
           </div>
 

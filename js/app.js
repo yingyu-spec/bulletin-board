@@ -6,8 +6,17 @@
 window.App = {
   announcements: [],
   selectedAttendees: new Set(),
-  currentView: 'list', // 'list' or 'calendar'
+  selectedDepartments: new Set(),   // 局內公告科室選已選
+  currentCategory: 'station',       // 'station'=分隊勤務 | 'bureau'=局內公告
+  currentView: 'list',
   currentDayDetailDate: '',
+
+  // 8 個科室清單
+  DEPARTMENTS: [
+    '災害搶救科', '緊急救護科', '火灾調查科',
+    '災害管理科', '災害預防科', '救灾救護指揮科',
+    '督察訓練科', '綜合企劃及安全衛生科'
+  ],
 
   async init() {
     // 1. 初始化各模組
@@ -20,6 +29,7 @@ window.App = {
     this.renderAttendeesGrid();
     this.renderBindingMemberGrid();  // LINE 綁定選號網格
     this.initTimeSelects();          // 24 小時制時間下拉
+    this.initDepartmentGrid();       // 科室選擇按鈕
 
     // 3. 綁定全域按鈕與表單事件
     this.bindEvents();
@@ -70,6 +80,93 @@ window.App = {
         ${m.id}
       </button>
     `).join('');
+  },
+
+  /**
+   * 初始化科室選擇按鈕網格
+   */
+  initDepartmentGrid() {
+    const grid = document.getElementById('departmentGrid');
+    if (!grid) return;
+    grid.innerHTML = this.DEPARTMENTS.map(dept => `
+      <button type="button" class="dept-btn-toggle" data-dept="${dept}"
+        onclick="App.toggleDepartment('${dept}')"
+        style="
+          padding: 10px 16px;
+          font-size: 0.95rem;
+          font-weight: 700;
+          border-radius: 10px;
+          border: 2px solid #e2e8f0;
+          background: #f8fafc;
+          color: #475569;
+          cursor: pointer;
+          transition: all 0.2s;
+        ">${dept}</button>
+    `).join('');
+  },
+
+  /**
+   * 切換公告種類：'station'(分隊勤務) | 'bureau'(局內公告)
+   */
+  switchCategory(cat) {
+    this.currentCategory = cat;
+    const btnStation  = document.getElementById('btnCategoryStation');
+    const btnBureau   = document.getElementById('btnCategoryBureau');
+    const secAttend   = document.getElementById('sectionAttendees');
+    const secDept     = document.getElementById('sectionDepartment');
+
+    if (cat === 'station') {
+      // 分隊勤務
+      btnStation.style.cssText  = 'flex:1; padding:14px; font-size:1.05rem; font-weight:800; border-radius:12px; border:2px solid var(--cyber-blue); background:var(--cyber-blue); color:#fff; cursor:pointer; transition:all 0.2s;';
+      btnBureau.style.cssText   = 'flex:1; padding:14px; font-size:1.05rem; font-weight:800; border-radius:12px; border:2px solid #e2e8f0; background:#f8fafc; color:#64748b; cursor:pointer; transition:all 0.2s;';
+      if (secAttend) secAttend.style.display = '';
+      if (secDept)   secDept.style.display   = 'none';
+    } else {
+      // 局內公告
+      btnBureau.style.cssText   = 'flex:1; padding:14px; font-size:1.05rem; font-weight:800; border-radius:12px; border:2px solid #6366f1; background:#6366f1; color:#fff; cursor:pointer; transition:all 0.2s;';
+      btnStation.style.cssText  = 'flex:1; padding:14px; font-size:1.05rem; font-weight:800; border-radius:12px; border:2px solid #e2e8f0; background:#f8fafc; color:#64748b; cursor:pointer; transition:all 0.2s;';
+      if (secAttend) secAttend.style.display = 'none';
+      if (secDept)   secDept.style.display   = '';
+    }
+  },
+
+  /**
+   * 切換科室選擇狀態
+   */
+  toggleDepartment(dept) {
+    const btn = document.querySelector(`.dept-btn-toggle[data-dept="${dept}"]`);
+    if (this.selectedDepartments.has(dept)) {
+      this.selectedDepartments.delete(dept);
+      if (btn) { btn.style.background = '#f8fafc'; btn.style.borderColor = '#e2e8f0'; btn.style.color = '#475569'; }
+    } else {
+      this.selectedDepartments.add(dept);
+      if (btn) { btn.style.background = '#6366f1'; btn.style.borderColor = '#6366f1'; btn.style.color = '#fff'; }
+    }
+  },
+
+  /**
+   * 清除所有科室選擇
+   */
+  clearDepartments() {
+    this.selectedDepartments.clear();
+    document.querySelectorAll('.dept-btn-toggle').forEach(btn => {
+      btn.style.background = '#f8fafc';
+      btn.style.borderColor = '#e2e8f0';
+      btn.style.color = '#475569';
+    });
+  },
+
+  /**
+   * 回塡已選科室到 UI
+   */
+  setSelectedDepartments(deptStr) {
+    this.clearDepartments();
+    if (!deptStr) return;
+    deptStr.split(',').map(s => s.trim()).filter(Boolean).forEach(dept => {
+      this.selectedDepartments.add(dept);
+      const btn = document.querySelector(`.dept-btn-toggle[data-dept="${dept}"]`);
+      if (btn) { btn.style.background = '#6366f1'; btn.style.borderColor = '#6366f1'; btn.style.color = '#fff'; }
+    });
   },
 
   /**
@@ -334,6 +431,10 @@ window.App = {
     const currentUser = LiffAuth.getCurrentUser();
     this.toggleAttendeeSelection(currentUser.id);
 
+    // 預設種類為分隊勤務，清除科室
+    this.switchCategory('station');
+    this.clearDepartments();
+
     // 更新發布人名稱顯示
     document.getElementById('postAuthorDisplay').textContent = `${currentUser.name} (號碼: ${currentUser.id})`;
 
@@ -349,18 +450,26 @@ window.App = {
 
     const modal = document.getElementById('announcementModal');
     document.getElementById('modalFormTitle').innerHTML = `<span>✏️</span><span>編輯公告內容</span>`;
-    document.getElementById('editAnnouncementId').value = item.id; // 編輯時回塡日期與時間到兩個欄位
+    document.getElementById('editAnnouncementId').value = item.id;
     const existingDate = item.date || '';
     const datePart = existingDate.split(' ')[0];
     const timePart = existingDate.split(' ')[1] || '';
     document.getElementById('postDateInput').value = datePart;
-    this.setSelectedTime(timePart);   // 回塡小時與分鐘到下拉
+    this.setSelectedTime(timePart);
     this.updateDateWeekdayPreview(datePart);
     document.getElementById('postContentInput').value = item.content;
 
-    this.setSelectedAttendees(item.attendees || []);
-    document.getElementById('postAuthorDisplay').textContent = `${item.author || '01'} 號成員 (原作者)`;
+    // 回塡種類與出勤/科室
+    const cat = item.category || 'station';
+    const catKey = cat === '局內公告' ? 'bureau' : 'station';
+    this.switchCategory(catKey);
+    if (catKey === 'station') {
+      this.setSelectedAttendees(item.attendees || []);
+    } else {
+      this.setSelectedDepartments(item.department || '');
+    }
 
+    document.getElementById('postAuthorDisplay').textContent = `${item.author || '01'} 號成員 (原作者)`;
     modal?.classList.add('active');
   },
 
@@ -391,7 +500,9 @@ window.App = {
     // 取日期部分計算星期
     const datePart = dateVal;
     const weekday = DataStore.getDayOfWeek(datePart, true);
-    const attendees = Array.from(this.selectedAttendees);
+    const attendees = this.currentCategory === 'station' ? Array.from(this.selectedAttendees) : [];
+    const department = this.currentCategory === 'bureau' ? Array.from(this.selectedDepartments).join(', ') : '';
+    const category   = this.currentCategory === 'bureau' ? '局內公告' : '分隊勤務';
     const currentUser = LiffAuth.getCurrentUser();
 
     const postPayload = {
@@ -400,8 +511,10 @@ window.App = {
       dayOfWeek: weekday,
       content: content,
       attendees: attendees,
-      author: id ? undefined : currentUser.id, // 若為新增則填寫當前登入者
-      createdAt: id ? undefined : DataStore.formatCurrentDateTime()
+      author: id ? undefined : currentUser.id,
+      createdAt: id ? undefined : DataStore.formatCurrentDateTime(),
+      category: category,
+      department: department
     };
 
     // 若為編輯，保留原作者與建立時間

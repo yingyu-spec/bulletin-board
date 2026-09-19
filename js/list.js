@@ -37,11 +37,32 @@ const ListView = {
       const isWeekendSun = weekday.includes('日');
       const weekendClass = isWeekendSun ? 'weekend-sun' : (isWeekendSat ? 'weekend-sat' : '');
 
-      // 出勤人員徽章 (01~16)
+      // 公告種類與出勤/科室
+      const category   = item.category || '分隊勤務';
+      const isBureau   = category === '局內公告';
+      const categoryBadgeStyle = isBureau
+        ? 'display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.82rem; font-weight:800; background:#ede9fe; color:#5b21b6; margin-bottom:6px;'
+        : 'display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.82rem; font-weight:800; background:#e0f2fe; color:#0369a1; margin-bottom:6px;';
+      const categoryLabel = isBureau ? '🏢 局內公告' : '🚨 分隊勤務';
+
+      // 出勤人員 or 科室
       const attendees = Array.isArray(item.attendees) ? item.attendees : [];
-      const attendeesHtml = attendees.length > 0 
-        ? attendees.sort().map(num => `<span class="attendee-chip" title="出勤同仁">${num} 號</span>`).join('')
-        : '<span style="color: var(--text-muted); font-size: 1rem;">無指定出勤人員</span>';
+      let bottomSection = '';
+      if (isBureau) {
+        // 科室顯示
+        const deptStr = item.department || '';
+        const depts = deptStr ? deptStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+        const deptsHtml = depts.length > 0
+          ? depts.map(d => `<span style="display:inline-block; padding:4px 10px; border-radius:8px; font-size:0.9rem; font-weight:700; background:#ede9fe; color:#5b21b6; margin:2px 4px 2px 0;">${d}</span>`).join('')
+          : '<span style="color: var(--text-muted); font-size: 1rem;">未指定科室</span>';
+        bottomSection = `<div class="attendees-section"><span class="attendees-label">🏢 科室：</span>${deptsHtml}</div>`;
+      } else {
+        // 出勤人員
+        const attendeesHtml = attendees.length > 0
+          ? attendees.sort().map(num => `<span class="attendee-chip" title="出勤同仁">${num} 號</span>`).join('')
+          : '<span style="color: var(--text-muted); font-size: 1rem;">無指定出勤人員</span>';
+        bottomSection = `<div class="attendees-section"><span class="attendees-label">👥 出勤：</span>${attendeesHtml}</div>`;
+      }
 
       // 日期與時間分離顯示
       const dateParts = item.date ? item.date.split(' ') : [item.date, ''];
@@ -57,13 +78,11 @@ const ListView = {
             <div class="card-date-weekday ${weekendClass}">${weekday}</div>
           </div>
 
-          <!-- 中央：公告內文與出勤人員 01~16 -->
+          <!-- 中央：公告內文、種類、出勤人員或科室 -->
           <div class="card-body-column">
+            <span style="${categoryBadgeStyle}">${categoryLabel}</span>
             <div class="card-content-text">${this.escapeHtml(item.content)}</div>
-            <div class="attendees-section">
-              <span class="attendees-label">👥 出勤：</span>
-              ${attendeesHtml}
-            </div>
+            ${bottomSection}
           </div>
 
           <!-- 右側：發布人、時間與操作 -->

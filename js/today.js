@@ -67,28 +67,53 @@ const TodayView = {
     // ── 公告卡片清單（純顯示，大字） ──
     const cardsHtml = todayItems.map((item, idx) => {
       const timeStr = (item.date || '').split(' ')[1] || '';
-      const attendees = Array.isArray(item.attendees) ? item.attendees : [];
-      const attendeesHtml = attendees.length > 0
-        ? attendees.sort().map(num =>
-            `<span class="attendee-chip" style="font-size:1.1rem; padding:6px 14px;">${num} 號</span>`
-          ).join('')
-        : '<span style="color:var(--text-muted);">無指定</span>';
+      const category  = item.category || '分隊勤務';
+      const isBureau  = category === '局內公告';
+      const borderColor = isBureau ? '#6366f1' : 'var(--cyber-blue)';
+      const categoryLabel = isBureau ? '🏢 局內公告' : '🚨 分隊勤務';
+      const categoryBadgeBg = isBureau ? '#ede9fe' : '#e0f2fe';
+      const categoryBadgeColor = isBureau ? '#5b21b6' : '#0369a1';
+
+      // 出勤人員 or 科室
+      let bottomBlock = '';
+      if (isBureau) {
+        const deptStr = item.department || '';
+        const depts = deptStr ? deptStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+        const deptsHtml = depts.length > 0
+          ? depts.map(d => `<span style="display:inline-block; padding:6px 14px; border-radius:8px; font-size:1.05rem; font-weight:700; background:#ede9fe; color:#5b21b6; margin:2px 4px 2px 0;">${d}</span>`).join('')
+          : '<span style="color:var(--text-muted);">\u672a\u6307\u5b9a\u79d1\u5ba4</span>';
+        bottomBlock = `
+          <div style="background:#f5f3ff; border:1.5px solid #c4b5fd; border-radius:var(--radius-md); padding:14px 18px;">
+            <div style="font-size:1rem; font-weight:800; color:#5b21b6; margin-bottom:10px;">🏢 相關科室</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">${deptsHtml}</div>
+          </div>`;
+      } else {
+        const attendees = Array.isArray(item.attendees) ? item.attendees : [];
+        const attendeesHtml = attendees.length > 0
+          ? attendees.sort().map(num => `<span class="attendee-chip" style="font-size:1.1rem; padding:6px 14px;">${num} \u865f</span>`).join('')
+          : '<span style="color:var(--text-muted);">\u7121\u6307\u5b9a</span>';
+        bottomBlock = `
+          <div style="background:#f0f9ff; border:1.5px solid #bae6fd; border-radius:var(--radius-md); padding:14px 18px;">
+            <div style="font-size:1rem; font-weight:800; color:var(--text-muted); margin-bottom:10px;">👥 今日出勤人員</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">${attendeesHtml}</div>
+          </div>`;
+      }
 
       return `
         <div style="
           background: #fff;
           border: 2px solid var(--border-tech);
-          border-left: 6px solid var(--cyber-blue);
+          border-left: 6px solid ${borderColor};
           border-radius: var(--radius-lg);
           padding: 28px 32px;
           margin-bottom: 20px;
           box-shadow: 0 4px 20px rgba(0,0,0,0.06);
           transition: box-shadow 0.2s;
         ">
-          <!-- 序號 + 時間 -->
+          <!-- 序號 + 種類 + 時間 -->
           <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
             <div style="
-              background: var(--cyber-blue);
+              background: ${borderColor};
               color: #fff;
               font-size: 1.1rem;
               font-weight: 900;
@@ -97,9 +122,10 @@ const TodayView = {
               display: flex; align-items: center; justify-content: center;
               flex-shrink: 0;
             ">${idx + 1}</div>
-            ${timeStr ? `<div style="font-size:1.4rem; font-weight:900; color:var(--cyber-blue); letter-spacing:2px;">⏰ ${timeStr}</div>` : ''}
+            <span style="display:inline-block; padding:3px 12px; border-radius:20px; font-size:0.85rem; font-weight:800; background:${categoryBadgeBg}; color:${categoryBadgeColor};">${categoryLabel}</span>
+            ${timeStr ? `<div style="font-size:1.4rem; font-weight:900; color:${borderColor}; letter-spacing:2px;">⏰ ${timeStr}</div>` : ''}
             <div style="margin-left:auto; font-size:0.95rem; color:var(--text-muted);">
-              發布人：<strong style="color:var(--cyber-blue);">${item.author || ''} 號</strong>
+              發布人：<strong style="color:${borderColor};">${item.author || ''} 號</strong>
             </div>
           </div>
 
@@ -113,19 +139,11 @@ const TodayView = {
             white-space: pre-wrap;
           ">${ListView.escapeHtml(item.content)}</div>
 
-          <!-- 出勤人員 -->
-          <div style="
-            background: #f0f9ff;
-            border: 1.5px solid #bae6fd;
-            border-radius: var(--radius-md);
-            padding: 14px 18px;
-          ">
-            <div style="font-size:1rem; font-weight:800; color:var(--text-muted); margin-bottom:10px;">👥 今日出勤人員</div>
-            <div style="display:flex; flex-wrap:wrap; gap:8px;">${attendeesHtml}</div>
-          </div>
+          ${bottomBlock}
         </div>
       `;
     }).join('');
+
 
     // ── 底部統計 ──
     const summary = `
