@@ -156,11 +156,16 @@
         <div class="modal-body">
           <!-- 選擇日期 -->
           <div class="form-group">
-            <label for="postDateInput" class="form-label">
+            <label class="form-label">
               <span>📅 公告日期與時間</span>
-              <span class="required-badge">* 必選</span>
+              <span class="required-badge">* 必填</span>
             </label>
-            <input type="datetime-local" id="postDateInput" class="form-input" required>
+            <div style="display:flex; gap:12px; align-items:center;">
+              <!-- 日期選擇 -->
+              <input type="date" id="postDateInput" class="form-input" required style="flex:2;">
+              <!-- 時間選擇 (時:分) -->
+              <input type="time" id="postTimeInput" class="form-input" required style="flex:1; font-size:1.2rem; font-weight:700; text-align:center;">
+            </div>
             <!-- 自動計算之星期預覽 -->
             <div id="postWeekdayDisplay" class="date-preview-badge">
               🗓️ 星期：<strong id="postWeekdayText">尚未選擇日期</strong>

@@ -231,20 +231,15 @@ window.App = {
   },
 
   /**
-   * 當使用者在輸入框更改日期時，即時更新星期幾
-   * @param {string} datetimeStr - 'YYYY-MM-DDTHH:mm' (datetime-local 格式)
+   * 日期變更時，即時更新星期預覽
+   * @param {string} dateStr - 'YYYY-MM-DD'
    */
-  updateDateWeekdayPreview(datetimeStr) {
+  updateDateWeekdayPreview(dateStr) {
     const textEl = document.getElementById('postWeekdayText');
     if (!textEl) return;
-
-    if (!datetimeStr) {
-      textEl.textContent = '尚未選擇日期';
-      return;
-    }
-
+    if (!dateStr) { textEl.textContent = '尚未選擇日期'; return; }
     // 取日期部分計算星期
-    const datePart = datetimeStr.split('T')[0];
+    const datePart = dateStr.split(' ')[0].split('T')[0];
     const fullWeekday = DataStore.getDayOfWeek(datePart, true);
     textEl.textContent = fullWeekday || '格式無效';
   },
@@ -265,20 +260,21 @@ window.App = {
     document.getElementById('editAnnouncementId').value = '';
     document.getElementById('postContentInput').value = '';
 
-    // 設定日期，若未指定則預設為今天當前時間
-    let datetimeToSet = targetDate;
-    if (!datetimeToSet) {
-      const now = new Date();
-      const pad = (n) => (n < 10 ? '0' + n : n);
-      datetimeToSet = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    } else if (datetimeToSet.length === 10) {
-      // 若傳入的是純日期格式 (YYYY-MM-DD)，補上當前時間
-      const now = new Date();
-      const pad = (n) => (n < 10 ? '0' + n : n);
-      datetimeToSet = `${datetimeToSet}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    }
-    document.getElementById('postDateInput').value = datetimeToSet;
-    this.updateDateWeekdayPreview(datetimeToSet);
+    const now = new Date();
+    const pad = (n) => (n < 10 ? '0' + n : n);
+
+    // 日期欄位
+    let dateToSet = targetDate || `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    // 若傳入的是包含時間的字串，取日期部分
+    if (dateToSet.includes(' ')) dateToSet = dateToSet.split(' ')[0];
+    if (dateToSet.includes('T')) dateToSet = dateToSet.split('T')[0];
+    document.getElementById('postDateInput').value = dateToSet;
+
+    // 時間欄位預設現在時間
+    const timeToSet = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    document.getElementById('postTimeInput').value = timeToSet;
+
+    this.updateDateWeekdayPreview(dateToSet);
 
     // 清空並預設選取出勤同仁 (或預設當前登入者)
     this.clearAllAttendees();
@@ -300,9 +296,13 @@ window.App = {
 
     const modal = document.getElementById('announcementModal');
     document.getElementById('modalFormTitle').innerHTML = `<span>✏️</span><span>編輯公告內容</span>`;
-    document.getElementById('editAnnouncementId').value = item.id;
-    document.getElementById('postDateInput').value = item.date.length === 10 ? item.date : item.date.replace(' ', 'T').substring(0, 16);
-    this.updateDateWeekdayPreview(item.date);
+    document.getElementById('editAnnouncementId').value = item.id; // 編輯時回塡日期與時間到兩個欄位
+    const existingDate = item.date || '';
+    const datePart = existingDate.split(' ')[0];
+    const timePart = existingDate.split(' ')[1] || '';
+    document.getElementById('postDateInput').value = datePart;
+    document.getElementById('postTimeInput').value = timePart;
+    this.updateDateWeekdayPreview(datePart);
     document.getElementById('postContentInput').value = item.content;
 
     this.setSelectedAttendees(item.attendees || []);
@@ -325,19 +325,18 @@ window.App = {
     e.preventDefault();
 
     const id = document.getElementById('editAnnouncementId').value;
-    const datetimeRaw = document.getElementById('postDateInput').value; // 'YYYY-MM-DDTHH:mm'
-    const date = datetimeRaw.includes('T')
-      ? datetimeRaw.replace('T', ' ')   // 轉存格式為 'YYYY-MM-DD HH:mm'
-      : datetimeRaw;
+    const dateVal = document.getElementById('postDateInput').value;   // 'YYYY-MM-DD'
+    const timeVal = document.getElementById('postTimeInput').value;   // 'HH:mm'
+    const date = (dateVal && timeVal) ? `${dateVal} ${timeVal}` : dateVal;
     const content = document.getElementById('postContentInput').value.trim();
 
-    if (!date || !content) {
-      this.showToast('請務必填寫日期與公告內容！', 'error');
+    if (!dateVal || !timeVal || !content) {
+      this.showToast('請務必填寫日期、時間與公告內容！', 'error');
       return;
     }
 
     // 取日期部分計算星期
-    const datePart = date.split(' ')[0];
+    const datePart = dateVal;
     const weekday = DataStore.getDayOfWeek(datePart, true);
     const attendees = Array.from(this.selectedAttendees);
     const currentUser = LiffAuth.getCurrentUser();
