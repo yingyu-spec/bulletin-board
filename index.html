@@ -66,6 +66,10 @@
           <span class="icon">📅</span>
           <span>行事曆月曆</span>
         </button>
+        <button type="button" class="view-tab-btn" id="tabBtnToday" role="tab" aria-selected="false">
+          <span class="icon">📌</span>
+          <span>今日公告</span>
+        </button>
       </div>
 
       <!-- 發布按鈕 -->
@@ -135,6 +139,12 @@
       <!-- 日期格子 -->
       <div class="calendar-days-grid" id="calendarDaysGrid">
         <!-- 由 calendar.js 動態渲染月曆天數 -->
+      </div>
+    </section>
+    <!-- ==================== 視圖 3: 今日公告 ==================== -->
+    <section id="todayViewSection" style="display:none;">
+      <div id="todayAnnouncementContent">
+        <!-- 由 today.js 動態渲染今日公告 -->
       </div>
     </section>
   </main>
@@ -305,11 +315,12 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- ==================== 程式邏輯腳本 ==================== -->
-  <script src="js/config.js?v=20260919_6"></script>
-  <script src="js/data-store.js?v=20260919_6"></script>
-  <script src="js/liff-auth.js?v=20260919_6"></script>
-  <script src="js/list.js?v=20260919_6"></script>
-  <script src="js/calendar.js?v=20260919_6"></script>
-  <script src="js/app.js?v=20260919_6"></script>
+  <script src="js/config.js?v=20260919_7"></script>
+  <script src="js/data-store.js?v=20260919_7"></script>
+  <script src="js/liff-auth.js?v=20260919_7"></script>
+  <script src="js/list.js?v=20260919_7"></script>
+  <script src="js/calendar.js?v=20260919_7"></script>
+  <script src="js/today.js?v=20260919_7"></script>
+  <script src="js/app.js?v=20260919_7"></script>
 </body>
 </html>

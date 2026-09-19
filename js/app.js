@@ -205,6 +205,7 @@ window.App = {
     // 視圖切換
     document.getElementById('tabBtnList')?.addEventListener('click', () => this.switchView('list'));
     document.getElementById('tabBtnCalendar')?.addEventListener('click', () => this.switchView('calendar'));
+    document.getElementById('tabBtnToday')?.addEventListener('click', () => this.switchView('today'));
 
     // 新增公告彈窗觸發
     document.getElementById('btnOpenCreateModal')?.addEventListener('click', () => this.openCreateModal());
@@ -254,23 +255,33 @@ window.App = {
    */
   switchView(viewName) {
     this.currentView = viewName;
-    const tabList = document.getElementById('tabBtnList');
-    const tabCal = document.getElementById('tabBtnCalendar');
-    const secList = document.getElementById('listViewSection');
-    const secCal = document.getElementById('calendarViewSection');
+    const tabList     = document.getElementById('tabBtnList');
+    const tabCal      = document.getElementById('tabBtnCalendar');
+    const tabToday    = document.getElementById('tabBtnToday');
+    const secList     = document.getElementById('listViewSection');
+    const secCal      = document.getElementById('calendarViewSection');
+    const secToday    = document.getElementById('todayViewSection');
+    const filterBar   = document.querySelector('.filter-bar');
+
+    // 重置所有 tab
+    [tabList, tabCal, tabToday].forEach(t => t?.classList.remove('active'));
+    [secList, secCal, secToday].forEach(s => { if (s) s.style.display = 'none'; });
 
     if (viewName === 'list') {
-      tabList.classList.add('active');
-      tabCal.classList.remove('active');
-      secList.style.display = 'flex';
-      secCal.style.display = 'none';
+      tabList?.classList.add('active');
+      if (secList) secList.style.display = 'flex';
+      if (filterBar) filterBar.style.display = '';
       this.applyFilters();
-    } else {
-      tabCal.classList.add('active');
-      tabList.classList.remove('active');
-      secCal.style.display = 'block';
-      secList.style.display = 'none';
+    } else if (viewName === 'calendar') {
+      tabCal?.classList.add('active');
+      if (secCal) secCal.style.display = 'block';
+      if (filterBar) filterBar.style.display = '';
       CalendarView.setData(this.announcements);
+    } else if (viewName === 'today') {
+      tabToday?.classList.add('active');
+      if (secToday) secToday.style.display = 'block';
+      if (filterBar) filterBar.style.display = 'none'; // 今日公告不需要搜尋列
+      TodayView.render(this.announcements);
     }
   },
 
@@ -494,6 +505,8 @@ window.App = {
       this.announcements = await DataStore.getAnnouncements();
       this.applyFilters();
       CalendarView.setData(this.announcements);
+      // 若目前在今日公告檢視，同步更新
+      if (this.currentView === 'today') TodayView.render(this.announcements);
       if (showToastMsg) {
         this.showToast('✅ 資料已完成同步最新狀態！', 'success');
       }
