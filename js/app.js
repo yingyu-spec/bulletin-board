@@ -19,6 +19,7 @@ window.App = {
     this.initMemberSelects();
     this.renderAttendeesGrid();
     this.renderBindingMemberGrid();  // LINE 綁定選號網格
+    this.initTimeSelects();          // 24 小時制時間下拉
 
     // 3. 綁定全域按鈕與表單事件
     this.bindEvents();
@@ -87,6 +88,49 @@ window.App = {
         ${m.id}
       </button>
     `).join('');
+  },
+
+  /**
+   * 初始化 24 小時制時間下拉選單 (00~23 小時, 00~59 分鐘)
+   */
+  initTimeSelects() {
+    const hourSel = document.getElementById('postHourInput');
+    const minSel  = document.getElementById('postMinuteInput');
+    if (!hourSel || !minSel) return;
+
+    // 小時 00~23
+    hourSel.innerHTML = Array.from({ length: 24 }, (_, i) => {
+      const v = i.toString().padStart(2, '0');
+      return `<option value="${v}">${v}</option>`;
+    }).join('');
+
+    // 分鐘 00~59
+    minSel.innerHTML = Array.from({ length: 60 }, (_, i) => {
+      const v = i.toString().padStart(2, '0');
+      return `<option value="${v}">${v}</option>`;
+    }).join('');
+  },
+
+  /**
+   * 讀取当前選定的時間字串 'HH:mm'
+   */
+  getSelectedTime() {
+    const h = document.getElementById('postHourInput')?.value  || '00';
+    const m = document.getElementById('postMinuteInput')?.value || '00';
+    return `${h}:${m}`;
+  },
+
+  /**
+   * 設定小時與分鐘下拉選單
+   */
+  setSelectedTime(timeStr) {
+    const parts = (timeStr || '').split(':');
+    const h = (parts[0] || '00').padStart(2, '0');
+    const m = (parts[1] || '00').padStart(2, '0');
+    const hourSel = document.getElementById('postHourInput');
+    const minSel  = document.getElementById('postMinuteInput');
+    if (hourSel) hourSel.value = h;
+    if (minSel)  minSel.value  = m;
   },
 
   /**
@@ -265,14 +309,12 @@ window.App = {
 
     // 日期欄位
     let dateToSet = targetDate || `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-    // 若傳入的是包含時間的字串，取日期部分
     if (dateToSet.includes(' ')) dateToSet = dateToSet.split(' ')[0];
     if (dateToSet.includes('T')) dateToSet = dateToSet.split('T')[0];
     document.getElementById('postDateInput').value = dateToSet;
 
-    // 時間欄位預設現在時間
-    const timeToSet = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    document.getElementById('postTimeInput').value = timeToSet;
+    // 時間下拉預設現在時間
+    this.setSelectedTime(`${pad(now.getHours())}:${pad(now.getMinutes())}`);
 
     this.updateDateWeekdayPreview(dateToSet);
 
@@ -301,7 +343,7 @@ window.App = {
     const datePart = existingDate.split(' ')[0];
     const timePart = existingDate.split(' ')[1] || '';
     document.getElementById('postDateInput').value = datePart;
-    document.getElementById('postTimeInput').value = timePart;
+    this.setSelectedTime(timePart);   // 回塡小時與分鐘到下拉
     this.updateDateWeekdayPreview(datePart);
     document.getElementById('postContentInput').value = item.content;
 
@@ -326,12 +368,12 @@ window.App = {
 
     const id = document.getElementById('editAnnouncementId').value;
     const dateVal = document.getElementById('postDateInput').value;   // 'YYYY-MM-DD'
-    const timeVal = document.getElementById('postTimeInput').value;   // 'HH:mm'
-    const date = (dateVal && timeVal) ? `${dateVal} ${timeVal}` : dateVal;
+    const timeVal = this.getSelectedTime();                            // 'HH:mm'
+    const date = `${dateVal} ${timeVal}`;
     const content = document.getElementById('postContentInput').value.trim();
 
-    if (!dateVal || !timeVal || !content) {
-      this.showToast('請務必填寫日期、時間與公告內容！', 'error');
+    if (!dateVal || !content) {
+      this.showToast('請務必填寫日期與公告內容！', 'error');
       return;
     }
 

@@ -163,8 +163,16 @@
             <div style="display:flex; gap:12px; align-items:center;">
               <!-- 日期選擇 -->
               <input type="date" id="postDateInput" class="form-input" required style="flex:2;">
-              <!-- 時間選擇 (時:分) -->
-              <input type="time" id="postTimeInput" class="form-input" required style="flex:1; font-size:1.2rem; font-weight:700; text-align:center;">
+              <!-- 時間選擇 - 24小時制下拉 -->
+              <div style="display:flex; align-items:center; gap:4px; flex:1;">
+                <select id="postHourInput" class="form-input" style="flex:1; font-size:1.15rem; font-weight:800; text-align:center; padding:10px 4px;">
+                  <!-- 由 JS 產生 00~23 -->
+                </select>
+                <span style="font-size:1.4rem; font-weight:900; color:var(--cyber-blue);">:</span>
+                <select id="postMinuteInput" class="form-input" style="flex:1; font-size:1.15rem; font-weight:800; text-align:center; padding:10px 4px;">
+                  <!-- 由 JS 產生 00~59，每5分鐘 -->
+                </select>
+              </div>
             </div>
             <!-- 自動計算之星期預覽 -->
             <div id="postWeekdayDisplay" class="date-preview-badge">
