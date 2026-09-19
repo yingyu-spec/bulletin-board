@@ -43,11 +43,17 @@ const ListView = {
         ? attendees.sort().map(num => `<span class="attendee-chip" title="出勤同仁">${num} 號</span>`).join('')
         : '<span style="color: var(--text-muted); font-size: 1rem;">無指定出勤人員</span>';
 
+      // 日期與時間分離顯示
+      const dateParts = item.date ? item.date.split(' ') : [item.date, ''];
+      const dateOnly = dateParts[0] || item.date;
+      const timeOnly = dateParts[1] || '';
+
       return `
         <article class="announcement-card" data-id="${item.id}">
           <!-- 左側：特大日期與星期標籤 -->
           <div class="card-date-column">
-            <div class="card-date-primary">${item.date}</div>
+            <div class="card-date-primary">${dateOnly}</div>
+            ${timeOnly ? `<div style="font-size:1.1rem; font-weight:800; color:var(--cyber-blue); letter-spacing:1px; margin: 2px 0 4px;">⏰ ${timeOnly}</div>` : ''}
             <div class="card-date-weekday ${weekendClass}">${weekday}</div>
           </div>
 

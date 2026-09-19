@@ -15,7 +15,9 @@ const DataStore = {
    */
   getDayOfWeek(dateStr, isFull = true) {
     if (!dateStr) return '';
-    const parts = dateStr.split('-');
+    // 支援 'YYYY-MM-DD HH:mm' 或 'YYYY-MM-DDTHH:mm' 格式，只取日期部分
+    const datePart = dateStr.split(' ')[0].split('T')[0];
+    const parts = datePart.split('-');
     if (parts.length !== 3) return '';
     const dateObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
     const dayIndex = dateObj.getDay();
