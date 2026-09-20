@@ -73,8 +73,10 @@ const CalendarView = {
     const eventMap = {};
     this.announcements.forEach(item => {
       if (!item.date) return;
-      if (!eventMap[item.date]) eventMap[item.date] = [];
-      eventMap[item.date].push(item);
+      // 公告日期可包含時間（YYYY-MM-DD HH:mm），月曆則以日期格為單位。
+      const dateKey = String(item.date).split(' ')[0].split('T')[0];
+      if (!eventMap[dateKey]) eventMap[dateKey] = [];
+      eventMap[dateKey].push(item);
     });
 
     let cellsHtml = '';

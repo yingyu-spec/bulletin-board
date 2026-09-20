@@ -36,6 +36,8 @@ window.App = {
 
     // 4. 載入並渲染公告資料
     await this.refreshData();
+    // 支援 LINE 圖文訊息直接連到指定顯示方式，例如 ?view=today
+    this.switchView(this.getViewFromUrl());
   },
 
   /**
@@ -348,9 +350,27 @@ window.App = {
   },
 
   /**
-   * 切換視圖 (條列式 vs 行事曆)
+   * 從網址取得指定顯示方式；未知值一律回到條列式。
+   */
+  getViewFromUrl() {
+    const view = new URLSearchParams(window.location.search).get('view');
+    return ['list', 'calendar', 'today'].includes(view) ? view : 'list';
+  },
+
+  /**
+   * 將目前顯示方式寫回網址，方便複製為 LINE 圖文訊息連結。
+   */
+  updateViewUrl(viewName) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', viewName);
+    window.history.replaceState({}, '', url.toString());
+  },
+
+  /**
+   * 切換視圖 (條列式、行事曆、今日公告)
    */
   switchView(viewName) {
+    if (!['list', 'calendar', 'today'].includes(viewName)) viewName = 'list';
     this.currentView = viewName;
     const tabList     = document.getElementById('tabBtnList');
     const tabCal      = document.getElementById('tabBtnCalendar');
@@ -380,6 +400,8 @@ window.App = {
       if (filterBar) filterBar.style.display = 'none'; // 今日公告不需要搜尋列
       TodayView.render(this.announcements);
     }
+
+    this.updateViewUrl(viewName);
   },
 
   /**
@@ -664,7 +686,11 @@ window.App = {
     const weekday = DataStore.getDayOfWeek(dateStr, true);
     document.getElementById('dayDetailDateText').textContent = `${dateStr} (${weekday}) 公告與出勤`;
 
-    const dayItems = this.announcements.filter(p => p.date === dateStr);
+    // 公告會儲存時間（YYYY-MM-DD HH:mm）；月曆點擊只傳入日期。
+    const dayItems = this.announcements.filter(p => {
+      const announcementDate = String(p.date || '').split(' ')[0].split('T')[0];
+      return announcementDate === dateStr;
+    });
     const body = document.getElementById('dayDetailBody');
 
     if (dayItems.length === 0) {

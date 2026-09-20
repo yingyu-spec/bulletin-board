@@ -27,7 +27,10 @@ const LiffAuth = {
           this.lineProfile = await liff.getProfile();
           await this._handleAfterLogin();   // ← 核心：登入後處理綁定
         } else {
-          this.updateLineUI(false);
+          // 從 LINE 圖文選單／LIFF URL 進入時，直接開啟授權流程。
+          // 授權完成後會回到目前網址，接著自動查詢或建立綁定。
+          liff.login({ redirectUri: window.location.href });
+          return;
         }
       } catch (err) {
         console.warn('⚠️ LIFF 初始化失敗:', err);
@@ -86,17 +89,29 @@ const LiffAuth = {
      呼叫 GAS 儲存 LINE ↔ 號碼 綁定
   ───────────────────────────────────────── */
   async _saveBinding(memberId) {
-    if (!CONFIG.GAS_API_URL || CONFIG.GAS_API_URL.trim() === '') return;
-    if (!this.lineProfile) return;
+    if (!CONFIG.GAS_API_URL || CONFIG.GAS_API_URL.trim() === '') {
+      throw new Error('尚未設定 Google Apps Script API 網址');
+    }
+    if (!this.lineProfile) {
+      throw new Error('尚未取得 LINE 使用者資料，請重新登入');
+    }
     try {
       const url = `${CONFIG.GAS_API_URL}?action=bindUser` +
         `&memberId=${encodeURIComponent(memberId)}` +
         `&lineUserId=${encodeURIComponent(this.lineProfile.userId)}` +
         `&displayName=${encodeURIComponent(this.lineProfile.displayName || '')}` +
         `&t=${Date.now()}`;
-      await fetch(url);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`API 回應錯誤：${response.status}`);
+
+      const result = await response.json();
+      if (!result || result.status !== 'success') {
+        throw new Error((result && result.message) || '伺服器未完成綁定');
+      }
+      return true;
     } catch (e) {
       console.warn('儲存綁定失敗', e);
+      throw e;
     }
   },
 
@@ -133,7 +148,9 @@ const LiffAuth = {
         window.App.showToast(`🎉 LINE 帳號已成功綁定 ${memberId} 號！`, 'success');
       }
     } catch (e) {
-      if (window.App) window.App.showToast('綁定失敗，請重試', 'error');
+      if (window.App) {
+        window.App.showToast(`綁定失敗：${e.message || '請確認網路與 GAS 部署設定後重試'}`, 'error');
+      }
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = '確認綁定'; }
     }
