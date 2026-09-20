@@ -1221,36 +1221,235 @@ body {
     font-size: 16px;
   }
 
+  body {
+    padding-bottom: 28px;
+  }
+
+  .container {
+    padding: 0 12px;
+  }
+
+  .app-header {
+    position: relative;
+    padding: 10px 0;
+    margin-bottom: 14px;
+  }
+
   .header-content {
     flex-direction: column;
     align-items: flex-start;
+    gap: 10px;
+  }
+
+  .brand {
+    gap: 10px;
+  }
+
+  .brand-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 21px;
+  }
+
+  .brand-title {
+    font-size: 1.2rem;
+    white-space: nowrap;
+  }
+
+  .brand-badge {
+    display: none;
   }
 
   .user-panel {
     width: 100%;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 7px 9px;
+    border-radius: var(--radius-md);
+  }
+
+  .current-user-badge > span:first-child {
+    display: none;
+  }
+
+  .current-user-badge {
+    gap: 0;
+  }
+
+  .user-num-tag {
+    padding: 5px 10px;
+    font-size: 1rem;
+  }
+
+  .user-switcher-select {
+    width: 100%;
+    min-width: 0;
+    padding: 8px;
+    font-size: 0.92rem;
+  }
+
+  .btn-line-login {
+    padding: 9px 11px;
+    font-size: 0.9rem;
+    gap: 5px;
   }
 
   .controls-section {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
+    margin-bottom: 16px;
   }
 
   .view-tabs {
     width: 100%;
+    padding: 4px;
+    border-radius: var(--radius-md);
   }
 
   .view-tab-btn {
     flex: 1;
     justify-content: center;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding: 8px 3px;
+    font-size: 0.88rem;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .view-tab-btn .icon {
+    font-size: 1.15rem;
   }
 
   .btn-create-post {
     width: 100%;
     justify-content: center;
+    padding: 13px 16px;
+  }
+
+  .filter-bar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
+  .search-input-wrapper {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .filter-group {
+    min-width: 0;
+    gap: 6px;
+  }
+
+  .filter-label {
+    white-space: nowrap;
+  }
+
+  .filter-select {
+    min-width: 0;
+    width: 100%;
+    padding: 9px 7px;
   }
 
   .attendees-grid-select {
     grid-template-columns: repeat(4, 1fr);
+  }
+
+  .announcement-card {
+    padding: 16px;
+    border-left-width: 4px;
+    border-radius: var(--radius-md);
+  }
+
+  .card-date-primary {
+    font-size: 1.35rem;
+  }
+
+  .calendar-header {
+    gap: 8px;
+    align-items: center;
+  }
+
+  .calendar-month-title {
+    font-size: 1.3rem;
+  }
+
+  .calendar-nav-buttons {
+    gap: 5px;
+  }
+
+  .btn-cal-nav, .btn-cal-today {
+    padding: 7px 9px;
+    font-size: 0.9rem;
+  }
+
+  .calendar-weekdays-grid, .calendar-days-grid {
+    gap: 3px;
+  }
+
+  .weekday-header-cell {
+    padding: 7px 1px;
+    font-size: 0.7rem;
+    letter-spacing: 0;
+  }
+
+  .calendar-day-cell {
+    height: 70px;
+    min-height: 70px;
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .day-number {
+    font-size: 0.95rem;
+  }
+
+  .calendar-day-cell.today .day-number {
+    width: 24px;
+    height: 24px;
+  }
+
+  .day-event-badge, .day-event-badge .cal-attendee-mini {
+    font-size: 0.62rem;
+  }
+
+  .day-event-badge {
+    padding: 2px 3px;
+    border-left-width: 2px;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-container {
+    max-height: 94vh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: 0;
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .modal-title {
+    font-size: 1.2rem;
+  }
+
+  .modal-body {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
   }
 }
