@@ -5,7 +5,7 @@
 const CONFIG = {
   // 1. Google Apps Script 部署後的 Web App URL (部署完成後請替換此處)
   // 例: 'https://script.google.com/macros/s/AKfycbx.../exec'
-  GAS_API_URL: 'https://script.google.com/macros/s/AKfycbwR9oQnevB010JR7yJD_1qQHrXGDovZ1_yzO6TAvabmxUgaNgrOkmEpBE-OLmTdAFBg/exec',
+  GAS_API_URL: 'https://script.google.com/macros/s/AKfycby5pfEYygOVxY5Zm-hIsl3yuiS7V-MeSHW0HaQi6OE8zPxVYzfnIvxh_nSq1wzOtc8q/exec',
 
   // 2. LINE LIFF ID (若尚未申請，系統會自動使用本機模擬登入模式)
   // 例: '2001234567-abcdefgh'
