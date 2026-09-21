@@ -5,6 +5,7 @@
 
 window.App = {
   announcements: [],
+  filteredAnnouncements: [],
   selectedAttendees: new Set(),
   selectedDepartments: new Set(),   // 局內公告科室選已選
   currentCategory: 'station',       // 'station'=分隊勤務 | 'bureau'=局內公告
@@ -324,6 +325,7 @@ window.App = {
 
     // 關鍵字搜尋即時過濾
     document.getElementById('searchInput')?.addEventListener('input', () => this.applyFilters());
+    document.getElementById('categoryFilterSelect')?.addEventListener('change', () => this.applyFilters());
 
     // 重新整理資料
     document.getElementById('btnRefreshData')?.addEventListener('click', () => this.refreshData(true));
@@ -393,12 +395,12 @@ window.App = {
       tabCal?.classList.add('active');
       if (secCal) secCal.style.display = 'block';
       if (filterBar) filterBar.style.display = '';
-      CalendarView.setData(this.announcements);
+      this.applyFilters();
     } else if (viewName === 'today') {
       tabToday?.classList.add('active');
       if (secToday) secToday.style.display = 'block';
       if (filterBar) filterBar.style.display = 'none'; // 今日公告不需要搜尋列
-      TodayView.render(this.announcements);
+      TodayView.render(this.filteredAnnouncements);
     }
 
     this.updateViewUrl(viewName);
@@ -639,9 +641,8 @@ window.App = {
     try {
       this.announcements = await DataStore.getAnnouncements();
       this.applyFilters();
-      CalendarView.setData(this.announcements);
       // 若目前在今日公告檢視，同步更新
-      if (this.currentView === 'today') TodayView.render(this.announcements);
+      if (this.currentView === 'today') TodayView.render(this.filteredAnnouncements);
       if (showToastMsg) {
         this.showToast('✅ 資料已完成同步最新狀態！', 'success');
       }
@@ -653,11 +654,12 @@ window.App = {
   },
 
   /**
-   * 執行關鍵字與人員篩選
+   * 執行關鍵字、人員與公告種類篩選，並同步所有檢視。
    */
   applyFilters() {
     const keyword = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
     const attendeeFilter = document.getElementById('attendeeFilterSelect')?.value || 'ALL';
+    const categoryFilter = document.getElementById('categoryFilterSelect')?.value || 'ALL';
 
     let filtered = [...this.announcements];
 
@@ -667,15 +669,22 @@ window.App = {
       });
     }
 
+    if (categoryFilter !== 'ALL') {
+      filtered = filtered.filter(item => (item.category || '分隊勤務') === categoryFilter);
+    }
+
     if (keyword) {
       filtered = filtered.filter(item => {
-        const text = `${item.content} ${item.date} ${item.dayOfWeek} ${item.author}`.toLowerCase();
+        const text = `${item.content} ${item.date} ${item.dayOfWeek} ${item.author} ${item.category || '分隊勤務'} ${item.department || ''}`.toLowerCase();
         const attendeeStr = (item.attendees || []).join(' ');
         return text.includes(keyword) || attendeeStr.includes(keyword);
       });
     }
 
+    this.filteredAnnouncements = filtered;
     ListView.render(filtered);
+    CalendarView.setData(filtered);
+    if (this.currentView === 'today') TodayView.render(filtered);
   },
 
   /**
@@ -687,7 +696,7 @@ window.App = {
     document.getElementById('dayDetailDateText').textContent = `${dateStr} (${weekday}) 公告與出勤`;
 
     // 公告會儲存時間（YYYY-MM-DD HH:mm）；月曆點擊只傳入日期。
-    const dayItems = this.announcements.filter(p => {
+    const dayItems = this.filteredAnnouncements.filter(p => {
       const announcementDate = String(p.date || '').split(' ')[0].split('T')[0];
       return announcementDate === dateStr;
     });

@@ -98,6 +98,16 @@
         </select>
       </div>
 
+      <!-- 公告種類篩選 -->
+      <div class="filter-group">
+        <label for="categoryFilterSelect" class="filter-label">公告種類：</label>
+        <select id="categoryFilterSelect" class="filter-select">
+          <option value="ALL">全部種類</option>
+          <option value="分隊勤務">分隊勤務</option>
+          <option value="局內公告">局內公告</option>
+        </select>
+      </div>
+
       <!-- 資料同步按鈕 -->
       <button type="button" class="btn-card-action" id="btnRefreshData" title="從 Google Sheets 重新同步" style="padding: 10px 16px;">
         🔄 重新整理
@@ -345,6 +355,6 @@
   <script src="js/list.js?v=20260920_1"></script>
   <script src="js/calendar.js?v=20260920_1"></script>
   <script src="js/today.js?v=20260920_1"></script>
-  <script src="js/app.js?v=20260920_2"></script>
+  <script src="js/app.js?v=20260921_1"></script>
 </body>
 </html>
