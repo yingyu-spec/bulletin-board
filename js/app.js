@@ -316,6 +316,9 @@ window.App = {
     document.getElementById('btnSelectAllAttendees')?.addEventListener('click', () => this.selectAllAttendees());
     document.getElementById('btnClearAllAttendees')?.addEventListener('click', () => this.clearAllAttendees());
 
+    // 同一份內容可手動加入多個發布時段
+    document.getElementById('btnAddScheduleTime')?.addEventListener('click', () => this.addScheduleTime());
+
     // 日期輸入變更時，立即動態計算並展示星期幾
     const dateInput = document.getElementById('postDateInput');
     dateInput?.addEventListener('input', (e) => this.updateDateWeekdayPreview(e.target.value));
@@ -449,6 +452,8 @@ window.App = {
     this.setSelectedTime(`${pad(now.getHours())}:${pad(now.getMinutes())}`);
 
     this.updateDateWeekdayPreview(dateToSet);
+    this.setAdditionalScheduleMode(true);
+    this.clearAdditionalScheduleTimes();
 
     // 清空並預設選取出勤同仁 (或預設當前登入者)
     this.clearAllAttendees();
@@ -481,6 +486,9 @@ window.App = {
     document.getElementById('postDateInput').value = datePart;
     this.setSelectedTime(timePart);
     this.updateDateWeekdayPreview(datePart);
+    // 多時段發布後，每筆公告皆可獨立編輯，避免誤改同批其他時段。
+    this.setAdditionalScheduleMode(false);
+    this.clearAdditionalScheduleTimes();
     document.getElementById('postContentInput').value = item.content;
 
     // 回塡種類與出勤/科室
@@ -505,6 +513,75 @@ window.App = {
   },
 
   /**
+   * 新增模式可指定多個時段；編輯模式僅處理目前這一筆公告。
+   */
+  setAdditionalScheduleMode(isVisible) {
+    const section = document.getElementById('additionalScheduleSection');
+    if (section) section.style.display = isVisible ? '' : 'none';
+  },
+
+  clearAdditionalScheduleTimes() {
+    const list = document.getElementById('additionalScheduleList');
+    if (list) list.replaceChildren();
+  },
+
+  /**
+   * 以目前主時段為預設值，加入一個可自行調整的日期與時間列。
+   */
+  addScheduleTime() {
+    const list = document.getElementById('additionalScheduleList');
+    if (!list) return;
+
+    const row = document.createElement('div');
+    row.className = 'additional-schedule-row';
+
+    const dateInput = document.createElement('input');
+    dateInput.type = 'date';
+    dateInput.className = 'form-input additional-schedule-date';
+    dateInput.required = true;
+    dateInput.value = document.getElementById('postDateInput')?.value || '';
+    dateInput.style.flex = '2';
+
+    const timeInput = document.createElement('input');
+    timeInput.type = 'time';
+    timeInput.className = 'form-input additional-schedule-time';
+    timeInput.required = true;
+    timeInput.value = this.getSelectedTime();
+    timeInput.style.flex = '1';
+
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'additional-schedule-remove';
+    removeButton.title = '移除此時段';
+    removeButton.setAttribute('aria-label', '移除此時段');
+    removeButton.textContent = '✕';
+    removeButton.addEventListener('click', () => row.remove());
+
+    row.append(dateInput, timeInput, removeButton);
+    list.appendChild(row);
+  },
+
+  getSelectedScheduleTimes() {
+    const primaryDate = document.getElementById('postDateInput')?.value || '';
+    const times = [{ date: primaryDate, time: this.getSelectedTime() }];
+    document.querySelectorAll('.additional-schedule-row').forEach(row => {
+      times.push({
+        date: row.querySelector('.additional-schedule-date')?.value || '',
+        time: row.querySelector('.additional-schedule-time')?.value || ''
+      });
+    });
+
+    // 相同日期時間只建立一筆，避免手動新增時不小心重複發布。
+    const uniqueKeys = new Set();
+    return times.filter(({ date, time }) => {
+      const key = `${date} ${time}`;
+      if (!date || !time || uniqueKeys.has(key)) return false;
+      uniqueKeys.add(key);
+      return true;
+    });
+  },
+
+  /**
    * 儲存公告 (新增或修改)
    */
   async handleFormSubmit(e) {
@@ -512,52 +589,48 @@ window.App = {
 
     const id = document.getElementById('editAnnouncementId').value;
     const dateVal = document.getElementById('postDateInput').value;   // 'YYYY-MM-DD'
-    const timeVal = this.getSelectedTime();                            // 'HH:mm'
-    const date = `${dateVal} ${timeVal}`;
     const content = document.getElementById('postContentInput').value.trim();
+    const scheduleTimes = this.getSelectedScheduleTimes();
 
-    if (!dateVal || !content) {
+    if (!dateVal || !content || scheduleTimes.length === 0) {
       this.showToast('請務必填寫日期與公告內容！', 'error');
       return;
     }
 
-    // 取日期部分計算星期
-    const datePart = dateVal;
-    const weekday = DataStore.getDayOfWeek(datePart, true);
     const attendees = this.currentCategory === 'station' ? Array.from(this.selectedAttendees) : [];
     const department = this.currentCategory === 'bureau' ? Array.from(this.selectedDepartments).join(', ') : '';
     const category   = this.currentCategory === 'bureau' ? '局內公告' : '分隊勤務';
     const currentUser = LiffAuth.getCurrentUser();
+    const origin = id ? this.announcements.find(p => p.id === id) : null;
+    const author = origin?.author || currentUser.id;
+    const createdAt = origin?.createdAt || DataStore.formatCurrentDateTime();
 
-    const postPayload = {
+    const buildPayload = ({ date, time }) => ({
       id: id || undefined,
-      date: date,
-      dayOfWeek: weekday,
-      content: content,
-      attendees: attendees,
-      author: id ? undefined : currentUser.id,
-      createdAt: id ? undefined : DataStore.formatCurrentDateTime(),
-      category: category,
-      department: department
-    };
-
-    // 若為編輯，保留原作者與建立時間
-    if (id) {
-      const origin = this.announcements.find(p => p.id === id);
-      if (origin) {
-        postPayload.author = origin.author;
-        postPayload.createdAt = origin.createdAt;
-      }
-    }
+      date: `${date} ${time}`,
+      dayOfWeek: DataStore.getDayOfWeek(date, true),
+      content,
+      attendees,
+      author,
+      createdAt,
+      category,
+      department
+    });
 
     const submitBtn = document.getElementById('btnSavePost');
     submitBtn.disabled = true;
     submitBtn.textContent = '儲存中...';
 
     try {
-      await DataStore.saveAnnouncement(postPayload);
+      // 依序送出以相容既有 GAS API；每個時段都是可獨立管理的一筆公告。
+      for (const scheduleTime of scheduleTimes) {
+        await DataStore.saveAnnouncement(buildPayload(scheduleTime));
+      }
       this.closeModal();
-      this.showToast(id ? '公告修改成功！' : '🎉 公告發布成功！', 'success');
+      const successMessage = id
+        ? '公告修改成功！'
+        : `🎉 已發布 ${scheduleTimes.length} 筆公告！`;
+      this.showToast(successMessage, 'success');
       await this.refreshData();
     } catch (err) {
       this.showToast('儲存失敗，請重試: ' + err.message, 'error');

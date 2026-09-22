@@ -11,7 +11,7 @@
   <!-- LINE LIFF SDK -->
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <!-- 主樣式表 (科技感・明亮・大字) -->
-  <link rel="stylesheet" href="css/style.css?v=20260920_5">
+  <link rel="stylesheet" href="css/style.css?v=20260922_1">
 </head>
 <body>
 
@@ -198,6 +198,15 @@
             <div id="postWeekdayDisplay" class="date-preview-badge">
               🗓️ 星期：<strong id="postWeekdayText">尚未選擇日期</strong>
             </div>
+            <!-- 同內容多時段發布：第一個時段使用上方欄位，後續時段可手動加入 -->
+            <div id="additionalScheduleSection" class="additional-schedule-section">
+              <div class="additional-schedule-header">
+                <span>🕒 其他發布時段</span>
+                <button type="button" class="btn-selector-tool" id="btnAddScheduleTime">＋ 新增時間</button>
+              </div>
+              <div id="additionalScheduleList"></div>
+              <p class="additional-schedule-hint">同一份內容會分別建立為獨立公告，可在之後逐筆編輯或刪除。</p>
+            </div>
           </div>
 
           <!-- 公告內容 -->
@@ -355,6 +364,6 @@
   <script src="js/list.js?v=20260920_1"></script>
   <script src="js/calendar.js?v=20260920_1"></script>
   <script src="js/today.js?v=20260920_1"></script>
-  <script src="js/app.js?v=20260921_1"></script>
+  <script src="js/app.js?v=20260922_1"></script>
 </body>
 </html>

@@ -237,6 +237,54 @@ body {
   box-shadow: 0 5px 14px rgba(6, 199, 85, 0.35);
 }
 
+/* 同內容多時段發布 */
+.additional-schedule-section {
+  margin-top: 14px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1.5px dashed var(--border-tech);
+  border-radius: var(--radius-md);
+}
+
+.additional-schedule-header,
+.additional-schedule-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.additional-schedule-header {
+  justify-content: space-between;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.additional-schedule-row {
+  margin-top: 10px;
+}
+
+.additional-schedule-row .form-input {
+  min-width: 0;
+}
+
+.additional-schedule-remove {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--cyber-rose);
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 7px;
+}
+
+.additional-schedule-hint {
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
 /* ============================================================
    操作工具列 (Controls Bar: 視圖切換 + 搜尋 + 發布)
    ============================================================ */
@@ -1451,5 +1499,14 @@ body {
 
   .modal-footer {
     padding: 12px 16px;
+  }
+
+  .additional-schedule-row {
+    gap: 6px;
+  }
+
+  .additional-schedule-row .form-input {
+    padding: 9px 6px;
+    font-size: 0.92rem;
   }
 }
